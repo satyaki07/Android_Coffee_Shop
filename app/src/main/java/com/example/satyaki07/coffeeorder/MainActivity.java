@@ -1,12 +1,13 @@
 package com.example.satyaki07.coffeeorder;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.TextView;
-
-import java.text.NumberFormat;
-import java.text.StringCharacterIterator;
 
 /**
  * Add your package below. Package name can be found in the project's AndroidManifest.xml file.
@@ -31,27 +32,50 @@ public class MainActivity extends AppCompatActivity {
      * This method is called when the order button is clicked.
      */
     public void submitOrder(View view) {
-        int price = calculatePrice();
-         String priceMessage = createOrderSummary(price);
-        displayMessage(priceMessage);
+        EditText nameField = (EditText) findViewById(R.id.name_field);
+        String name = nameField.getText().toString();
+        CheckBox chocolateToppingCheckbox = (CheckBox) findViewById(R.id.chocolate_topping_checkbox);
+        boolean hasChocolate = chocolateToppingCheckbox.isChecked();
+        CheckBox whippedCreamCheckbox = (CheckBox) findViewById(R.id.whipped_cream_checkbox);
+        boolean hasWhippedCream = whippedCreamCheckbox.isChecked();
+        int price = calculatePrice(hasChocolate,hasWhippedCream);
+         String priceMessage = createOrderSummary(name,price,hasChocolate,hasWhippedCream);
+
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+        intent.putExtra(Intent.EXTRA_SUBJECT, "Coffee Order for "+name);
+        intent.putExtra(Intent.EXTRA_TEXT,priceMessage);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
+//        displayMessage(priceMessage);
 
     }
 
     /**
-     * Calculates the price of the order.
-     *
-     * @param quantity is the number of cups of coffee ordered
-     */
-    private int calculatePrice() {
-        return quantity*5;
-    }
+     * Calculates the price of the order.*/
 
-    private String createOrderSummary(int price)
+    private int calculatePrice(boolean hasChocolate,boolean hasWhippedCream) {
+        int basePrice = 5;
+        if(hasChocolate)
+            basePrice += 2;
+        if(hasWhippedCream)
+            basePrice += 1;
+
+        return quantity*basePrice;
+    }
+     /**@param price of the order
+     * @param addWhippedCream is whether not the user want Whipped cream in the coffee
+     */
+
+    private String createOrderSummary(String name,int price,boolean addChocolateTopping,boolean addWhippedCream)
     {
-        String priceMessage = "Name: Satyaki";
+        String priceMessage = getString(R.string.order_summary_name, name);
         priceMessage = priceMessage+"\nQuantity: "+quantity;
+        priceMessage += "\nAdd Chocolate Topping? "+addChocolateTopping;
+        priceMessage = priceMessage+"\nAdd Whipped Cream? "+addWhippedCream;
         priceMessage = priceMessage+"\nTotal: $"+price;
-        priceMessage = priceMessage+"\nThank You.";
+        priceMessage = priceMessage+"\n" + getString(R.string.thank_you);
         return priceMessage;
     }
 
@@ -61,7 +85,9 @@ public class MainActivity extends AppCompatActivity {
      * this method will work when the plus button is clicked
      */
     public void increment(View view){
+        if(quantity!=101){
         quantity = quantity+1;
+        }
         displayQuantity(quantity);
 
     }
@@ -84,8 +110,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * This method displays the given text on the screen.
      */
-    private void displayMessage(String message) {
-        TextView orderSummaryTextView = (TextView) findViewById(R.id.order_summary_text_view);
-        orderSummaryTextView.setText(message);
-    }
+//    private void displayMessage(String message) {
+//        TextView orderSummaryTextView = (TextView) findViewById(R.id.order_summary_text_view);
+//        orderSummaryTextView.setText(message);
+//    }
 }
